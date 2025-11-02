@@ -33,8 +33,8 @@ export default async function handler(req, res) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'ngrok-skip-browser-warning': 'true', // Skip ngrok browser warning
-        'User-Agent': 'AJ-STUDIOZ-Bot/1.0'
+        'ngrok-skip-browser-warning': '69420',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
       },
       body: JSON.stringify({
         model: 'aj-mini',
