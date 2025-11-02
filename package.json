@@ -1,0 +1,9 @@
+{
+  "name": "aj-studioz-chatbot",
+  "version": "1.0.0",
+  "description": "AJ STUDIOZ Chatbot powered by custom AJ-Mini model",
+  "main": "api/chat.js",
+  "scripts": {
+    "dev": "vercel dev"
+  }
+}
