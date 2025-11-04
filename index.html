@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AJ STUDIOZ API - Enterprise AI Assistant</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="40" height="40" rx="8" fill="url(#gradient)"/>
+                    <path d="M12 28L16 12H20L24 28H20L19 24H17L16 28H12ZM17.5 20H18.5L18 16L17.5 20Z" fill="white"/>
+                    <path d="M25 12H29V16H31V20H27V28H25V12Z" fill="white"/>
+                    <defs>
+                        <linearGradient id="gradient" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                            <stop offset="0%" stop-color="#667eea"/>
+                            <stop offset="100%" stop-color="#764ba2"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <div class="logo-text">
+                    <h1>AJ STUDIOZ</h1>
+                    <span>Enterprise AI Platform</span>
+                </div>
+            </div>
+            <nav class="nav">
+                <a href="#api" class="nav-link">API</a>
+                <a href="#docs" class="nav-link">Docs</a>
+                <a href="#playground" class="nav-link active">Playground</a>
+                <a href="https://github.com/kamesh6592-cell/next" target="_blank" class="nav-link">GitHub</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="status-badge" id="statusBadge">
+                    <div class="status-dot"></div>
+                    <span>System Status: <span id="statusText">Checking...</span></span>
+                </div>
+                <h2 class="hero-title">Enterprise-Grade AI Assistant</h2>
+                <p class="hero-subtitle">Powerful, free, and unlimited. Claude & OpenAI compatible with advanced coding abilities.</p>
+                
+                <!-- Stats -->
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">⚡</div>
+                        <div class="stat-value" id="responseTime">--ms</div>
+                        <div class="stat-label">Response Time</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🚀</div>
+                        <div class="stat-value">Unlimited</div>
+                        <div class="stat-label">Rate Limit</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-value">FREE</div>
+                        <div class="stat-label">Forever</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🔥</div>
+                        <div class="stat-value" id="modelName">Phi-3 Mini</div>
+                        <div class="stat-label">AI Model</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <div class="content-grid">
+                <!-- Chat Interface -->
+                <div class="chat-section">
+                    <div class="section-header">
+                        <h3>🤖 AI Playground</h3>
+                        <button class="btn-secondary" onclick="clearChat()">Clear Chat</button>
+                    </div>
+                    
+                    <div class="chat-container" id="chatContainer">
+                        <div class="welcome-message">
+                            <div class="welcome-icon">👋</div>
+                            <h4>Welcome to AJ STUDIOZ AI Assistant</h4>
+                            <p>Ask me anything! I can help with coding, problem-solving, writing, and more.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="input-section">
+                        <div class="input-wrapper">
+                            <textarea 
+                                id="messageInput" 
+                                placeholder="Type your message here... (Shift+Enter for new line)"
+                                rows="1"
+                            ></textarea>
+                            <button class="btn-send" onclick="sendMessage()" id="sendBtn">
+                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M2 10L18 2L10 18L8 12L2 10Z" fill="currentColor"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="input-hint">
+                            <span>💡 Tip: Press Enter to send, Shift+Enter for new line</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Status & Info -->
+                <div class="sidebar">
+                    <!-- Health Status -->
+                    <div class="info-card">
+                        <h4>🏥 System Health</h4>
+                        <div class="health-items">
+                            <div class="health-item">
+                                <span>API Status</span>
+                                <div class="health-indicator" id="apiHealth">
+                                    <div class="spinner"></div>
+                                </div>
+                            </div>
+                            <div class="health-item">
+                                <span>Model Status</span>
+                                <div class="health-indicator" id="modelHealth">
+                                    <div class="spinner"></div>
+                                </div>
+                            </div>
+                            <div class="health-item">
+                                <span>Response Time</span>
+                                <span class="health-value" id="healthResponseTime">--ms</span>
+                            </div>
+                            <div class="health-item">
+                                <span>Last Updated</span>
+                                <span class="health-value" id="lastUpdated">--</span>
+                            </div>
+                        </div>
+                        <button class="btn-refresh" onclick="checkHealth()">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M13.5 8C13.5 10.7614 11.2614 13 8.5 13C5.73858 13 3.5 10.7614 3.5 8C3.5 5.23858 5.73858 3 8.5 3C10.5 3 12.1 4.1 13 5.5M13 2V5.5H9.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Refresh Status
+                        </button>
+                    </div>
+
+                    <!-- API Info -->
+                    <div class="info-card">
+                        <h4>🔌 API Endpoints</h4>
+                        <div class="endpoint-list">
+                            <div class="endpoint-item">
+                                <span class="endpoint-method">POST</span>
+                                <code>/v1/messages</code>
+                            </div>
+                            <div class="endpoint-item">
+                                <span class="endpoint-method">POST</span>
+                                <code>/v1/chat/completions</code>
+                            </div>
+                            <div class="endpoint-item">
+                                <span class="endpoint-method">POST</span>
+                                <code>/chat</code>
+                            </div>
+                            <div class="endpoint-item">
+                                <span class="endpoint-method">GET</span>
+                                <code>/v1/models</code>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Features -->
+                    <div class="info-card">
+                        <h4>✨ Features</h4>
+                        <ul class="feature-list">
+                            <li>
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path d="M3 8L6 11L13 4" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                Claude API Compatible
+                            </li>
+                            <li>
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path d="M3 8L6 11L13 4" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                OpenAI Compatible
+                            </li>
+                            <li>
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path d="M3 8L6 11L13 4" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                Advanced Code Generation
+                            </li>
+                            <li>
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path d="M3 8L6 11L13 4" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                Unlimited Usage
+                            </li>
+                            <li>
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path d="M3 8L6 11L13 4" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                Streaming Responses
+                            </li>
+                            <li>
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path d="M3 8L6 11L13 4" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                Free Forever
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Quick Start -->
+                    <div class="info-card">
+                        <h4>🚀 Quick Start</h4>
+                        <div class="code-block">
+                            <code>curl https://kamesh14151-aj-studioz-api.hf.space/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Hello!"}'</code>
+                        </div>
+                        <button class="btn-copy" onclick="copyApiExample()">Copy Example</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-left">
+                    <p>&copy; 2025 AJ STUDIOZ. All rights reserved.</p>
+                    <p class="footer-subtitle">Enterprise AI Solutions - Powered by Phi-3 Mini</p>
+                </div>
+                <div class="footer-right">
+                    <a href="https://ajstudioz.co.in" target="_blank">Website</a>
+                    <a href="https://github.com/kamesh6592-cell/next" target="_blank">GitHub</a>
+                    <a href="https://huggingface.co/spaces/kamesh14151/aj-studioz-api" target="_blank">HuggingFace</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

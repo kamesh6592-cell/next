@@ -1,9 +1,21 @@
 {
-  "name": "aj-studioz-chatbot",
+  "name": "aj-studioz-api-frontend",
   "version": "1.0.0",
-  "description": "AJ STUDIOZ Chatbot powered by custom AJ-Mini model",
-  "main": "api/chat.js",
+  "description": "AJ STUDIOZ API Frontend - Enterprise AI Platform with status monitoring and chat interface",
+  "main": "index.html",
   "scripts": {
-    "dev": "vercel dev"
-  }
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "keywords": [
+    "ai",
+    "chatbot",
+    "api",
+    "aj-studioz",
+    "claude",
+    "openai",
+    "phi-3"
+  ],
+  "author": "AJ STUDIOZ",
+  "license": "MIT"
 }
