@@ -5,15 +5,29 @@
 export default async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
+  // Handle GET request for health check
+  if (req.method === 'GET') {
+    return res.status(200).json({
+      status: 'online',
+      service: 'AJ STUDIOZ Chat API',
+      version: '1.0',
+      endpoints: {
+        chat: 'POST /api/chat with {"message": "your message"}',
+        backend: 'https://kamesh14151-aj-studioz-api.hf.space'
+      },
+      usage: 'Send POST request with JSON body: {"message": "Hello"}'
+    });
+  }
+
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).json({ error: 'Method not allowed. Use POST with {"message": "your text"}' });
   }
 
   const { message } = req.body;
