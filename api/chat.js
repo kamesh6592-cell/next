@@ -1,4 +1,5 @@
-// Vercel Serverless Function for Chatbot using Groq (FREE)
+// Vercel Serverless Function for AJ STUDIOZ Chatbot
+// Using Hugging Face Hosted API - FREE FOREVER
 // Deploy this to Vercel
 
 export default async function handler(req, res) {
@@ -22,43 +23,35 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Using AJ STUDIOZ API (Your own Ollama on Google Colab)
-    const AJ_API_URL = process.env.AJ_API_URL; // Add your ngrok URL in Vercel env vars
+    // Using AJ STUDIOZ API on Hugging Face Spaces (24/7 Free)
+    const AJ_API_URL = 'https://kamesh14151-aj-studioz-api.hf.space';
     
-    if (!AJ_API_URL) {
-      return res.status(500).json({ error: 'AJ_API_URL not configured. Add your ngrok URL to Vercel environment variables.' });
-    }
-
-    const response = await fetch(`${AJ_API_URL}/api/generate`, {
+    const response = await fetch(`${AJ_API_URL}/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'ngrok-skip-browser-warning': '69420',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
       },
       body: JSON.stringify({
-        model: 'aj-mini',
-        prompt: message,
-        stream: false
+        message: message
       }),
     });
 
     const data = await response.json();
     
     if (!response.ok) {
-      throw new Error(data.error?.message || 'API request failed');
+      throw new Error(data.error || 'API request failed');
     }
 
     return res.status(200).json({
-      reply: data.response,
-      model: 'AJ-Mini v1.0',
-      provider: 'AJ STUDIOZ'
+      reply: data.reply,
+      model: data.model || 'AJ-Mini v1.0',
+      provider: data.provider || 'AJ STUDIOZ'
     });
 
   } catch (error) {
     console.error('Error:', error);
     return res.status(500).json({ 
-      error: 'Failed to get response',
+      error: 'Failed to get response from AJ API',
       details: error.message 
     });
   }
