@@ -1,5 +1,5 @@
 // Vercel Serverless Function for AJ STUDIOZ Chatbot
-// Using Hugging Face Hosted API - FREE FOREVER
+// Using self-hosted APIs on HuggingFace Spaces - FREE FOREVER
 // Deploy this to Vercel
 
 export default async function handler(req, res) {
@@ -17,12 +17,14 @@ export default async function handler(req, res) {
     return res.status(200).json({
       status: 'online',
       service: 'AJ STUDIOZ Chat API',
-      version: '1.0',
+      version: '2.0',
       endpoints: {
         chat: 'POST /api/chat with {"message": "your message"}',
-        backend: 'https://kamesh14151-aj-studioz-api.hf.space'
+        backend_general: 'https://kamesh14151-aj-studioz-api.hf.space (AJ-Mini v2.0 - Phi-2)',
+        backend_coder: 'https://kamesh14151-aj-deepseek-api.hf.space (AJ-Coder v1.0 - Qwen2.5)'
       },
-      usage: 'Send POST request with JSON body: {"message": "Hello"}'
+      usage: 'Send POST request with JSON body: {"message": "Hello"}',
+      developed_by: 'AJ STUDIOZ'
     });
   }
 
@@ -37,36 +39,57 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Using AJ STUDIOZ API on Hugging Face Spaces (24/7 Free)
-    const AJ_API_URL = 'https://kamesh14151-aj-studioz-api.hf.space';
+    // Primary API: AJ-Mini (General AI)
+    const PRIMARY_API = 'https://kamesh14151-aj-studioz-api.hf.space';
+    // Fallback API: AJ-Coder (Coding AI)
+    const FALLBACK_API = 'https://kamesh14151-aj-deepseek-api.hf.space';
     
-    const response = await fetch(`${AJ_API_URL}/chat`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        message: message
-      }),
-    });
+    // Try primary API first
+    let apiUrl = PRIMARY_API;
+    let response;
+    
+    try {
+      response = await fetch(`${apiUrl}/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message }),
+        timeout: 60000 // 60 seconds timeout
+      });
+    } catch (primaryError) {
+      console.log('Primary API failed, trying fallback...', primaryError.message);
+      // Try fallback API
+      apiUrl = FALLBACK_API;
+      response = await fetch(`${apiUrl}/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message }),
+        timeout: 60000
+      });
+    }
 
     const data = await response.json();
     
     if (!response.ok) {
-      throw new Error(data.error || 'API request failed');
+      throw new Error(data.error || data.details || 'API request failed');
     }
 
     return res.status(200).json({
       reply: data.reply,
-      model: data.model || 'AJ-Mini v1.0',
-      provider: data.provider || 'AJ STUDIOZ'
+      model: data.model || 'AJ STUDIOZ AI',
+      provider: 'AJ STUDIOZ',
+      api_used: apiUrl
     });
 
   } catch (error) {
     console.error('Error:', error);
     return res.status(500).json({ 
-      error: 'Failed to get response from AJ API',
-      details: error.message 
+      error: 'Failed to get response from AJ STUDIOZ APIs',
+      details: error.message,
+      tip: 'APIs may be warming up. Please try again in a moment.'
     });
   }
 }
