@@ -1,5 +1,5 @@
 // API Configuration
-const API_BASE_URL = 'https://kamesh14151-aj-studioz-api.hf.space';
+const API_BASE_URL = 'https://api.ajstudioz.co.in/api';
 
 // Auto-resize textarea
 const messageInput = document.getElementById('messageInput');
@@ -21,7 +21,12 @@ async function checkHealth() {
     const startTime = Date.now();
     
     try {
-        const response = await fetch(`${API_BASE_URL}/`);
+        const response = await fetch(`${API_BASE_URL}/chat`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
         const endTime = Date.now();
         const responseTime = endTime - startTime;
         
@@ -38,7 +43,7 @@ async function checkHealth() {
             
             // Update model name
             if (data.model) {
-                document.getElementById('modelName').textContent = data.model.includes('Phi-3') ? 'Phi-3 Mini' : 'AJ-Mini';
+                document.getElementById('modelName').textContent = data.model || 'AJ-Coder v2.0';
             }
             
             // Update health indicators
@@ -233,7 +238,7 @@ function clearChat() {
 
 // Copy API example
 function copyApiExample() {
-    const code = `curl https://kamesh14151-aj-studioz-api.hf.space/chat \\
+    const code = `curl https://api.ajstudioz.co.in/api/chat \\
   -H "Content-Type: application/json" \\
   -d '{"message": "Hello!"}'`;
     
