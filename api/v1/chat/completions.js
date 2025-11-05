@@ -41,21 +41,31 @@ export default async function handler(req, res) {
     // Fallback API: HuggingFace Space with TinyLlama (Unlimited, Free)
     const FALLBACK_API = 'https://kamesh14151-aj-deepseek-api.hf.space';
     
+    // Check if user explicitly requested AJ-Mini model
+    const requestedModel = model || 'aj-coder-v2';
+    const forceAJMini = requestedModel.toLowerCase().includes('aj-mini') || requestedModel.toLowerCase().includes('mini');
+    
     let response;
     let usingFallback = false;
     
-    try {
-      // Try Modal API first (Primary)
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 seconds
+    // If AJ-Mini explicitly requested, use HuggingFace directly
+    if (forceAJMini) {
+      console.log('AJ-Mini model requested, using HuggingFace Space...');
+      usingFallback = true;
       
-      response = await fetch(`${MODAL_API}/v1/chat/completions`, {
+      const lastMessage = messages[messages.length - 1];
+      const userMessage = lastMessage.content;
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 seconds
+      
+      response = await fetch(`${FALLBACK_API}/v1/chat/completions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: model || 'aj-coder-v2',
+          model: 'aj-mini',
           messages,
           max_tokens: max_tokens || 512,
           temperature: temperature || 0.7,
@@ -65,32 +75,55 @@ export default async function handler(req, res) {
       });
       
       clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        throw new Error('Modal API failed');
+    } else {
+      // Use Modal API for AJ-Coder (Primary)
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 seconds
+        
+        response = await fetch(`${MODAL_API}/v1/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: model || 'aj-coder-v2',
+            messages,
+            max_tokens: max_tokens || 512,
+            temperature: temperature || 0.7,
+            stream: stream || false
+          }),
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          throw new Error('Modal API failed');
+        }
+      } catch (primaryError) {
+        console.log('Primary API (Modal) failed, switching to fallback (HuggingFace)...', primaryError.message);
+        usingFallback = true;
+        
+        // Extract last user message for fallback
+        const lastMessage = messages[messages.length - 1];
+        const userMessage = lastMessage.content;
+        
+        // Try HuggingFace Space fallback (Unlimited)
+        const fallbackController = new AbortController();
+        const fallbackTimeoutId = setTimeout(() => fallbackController.abort(), 120000); // 120 seconds
+        
+        response = await fetch(`${FALLBACK_API}/chat`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ message: userMessage }),
+          signal: fallbackController.signal
+        });
+        
+        clearTimeout(fallbackTimeoutId);
       }
-    } catch (primaryError) {
-      console.log('Primary API (Modal) failed, switching to fallback (HuggingFace)...', primaryError.message);
-      usingFallback = true;
-      
-      // Extract last user message for fallback
-      const lastMessage = messages[messages.length - 1];
-      const userMessage = lastMessage.content;
-      
-      // Try HuggingFace Space fallback (Unlimited)
-      const fallbackController = new AbortController();
-      const fallbackTimeoutId = setTimeout(() => fallbackController.abort(), 120000); // 120 seconds
-      
-      response = await fetch(`${FALLBACK_API}/chat`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ message: userMessage }),
-        signal: fallbackController.signal
-      });
-      
-      clearTimeout(fallbackTimeoutId);
     }
 
     if (!response.ok) {
