@@ -1,5 +1,5 @@
 // Vercel Serverless Function for AJ STUDIOZ Chatbot
-// Using self-hosted APIs on HuggingFace Spaces - FREE FOREVER
+// Using Modal.com GPU + DeepSeek-Coder-6.7B - Professional AI
 // Deploy this to Vercel
 
 export default async function handler(req, res) {
@@ -17,12 +17,14 @@ export default async function handler(req, res) {
     return res.status(200).json({
       status: 'online',
       service: 'AJ STUDIOZ Chat API',
-      version: '2.0',
+      version: '3.0',
       endpoints: {
         chat: 'POST /api/chat with {"message": "your message"}',
-        backend_general: 'https://kamesh14151-aj-studioz-api.hf.space (AJ-Mini v2.0 - Phi-2)',
-        backend_coder: 'https://kamesh14151-aj-deepseek-api.hf.space (AJ-Coder v1.0 - Qwen2.5)'
+        backend_primary: 'Modal.com GPU (AJ-Coder v2.0 - DeepSeek-Coder-6.7B)',
+        backend_fallback: 'HuggingFace Spaces (AJ-Mini v2.0 - TinyLlama)'
       },
+      model: 'DeepSeek-Coder-6.7B (Flagship)',
+      platform: 'Modal.com T4 GPU',
       usage: 'Send POST request with JSON body: {"message": "Hello"}',
       developed_by: 'AJ STUDIOZ'
     });
@@ -39,36 +41,49 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Primary API: AJ-Mini (General AI)
-    const PRIMARY_API = 'https://kamesh14151-aj-studioz-api.hf.space';
-    // Fallback API: AJ-Coder (Coding AI)
-    const FALLBACK_API = 'https://kamesh14151-aj-deepseek-api.hf.space';
+    // Primary API: Modal.com with DeepSeek-Coder-6.7B (Flagship)
+    const PRIMARY_API = 'https://kamesh6592-cell--aj-studioz-deepseek-fastapi-app.modal.run';
+    // Fallback API: HuggingFace Spaces with TinyLlama (Backup)
+    const FALLBACK_API = 'https://kamesh14151-aj-studioz-api.hf.space';
     
-    // Try primary API first
+    // Try primary API first (Modal GPU)
     let apiUrl = PRIMARY_API;
     let response;
+    let usingFallback = false;
     
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 seconds
+      
       response = await fetch(`${apiUrl}/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ message }),
-        timeout: 60000 // 60 seconds timeout
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
     } catch (primaryError) {
-      console.log('Primary API failed, trying fallback...', primaryError.message);
+      console.log('Primary API (Modal) failed, trying fallback (HF Spaces)...', primaryError.message);
+      usingFallback = true;
       // Try fallback API
       apiUrl = FALLBACK_API;
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
+      
       response = await fetch(`${apiUrl}/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ message }),
-        timeout: 60000
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
     }
 
     const data = await response.json();
@@ -79,17 +94,20 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       reply: data.reply,
-      model: data.model || 'AJ STUDIOZ AI',
-      provider: 'AJ STUDIOZ',
-      api_used: apiUrl
+      model: data.model || 'AJ-Coder v2.0',
+      developer: data.developer || 'AJ STUDIOZ',
+      inference_time: data.inference_time,
+      platform: data.platform || (usingFallback ? 'HuggingFace Spaces (Fallback)' : 'Modal.com GPU'),
+      api_used: usingFallback ? 'fallback' : 'primary'
     });
 
   } catch (error) {
     console.error('Error:', error);
     return res.status(500).json({ 
-      error: 'Failed to get response from AJ STUDIOZ APIs',
+      error: 'Failed to get response from AJ API',
       details: error.message,
-      tip: 'APIs may be warming up. Please try again in a moment.'
+      tip: 'API may be warming up. Please try again in a moment.',
+      service: 'AJ STUDIOZ'
     });
   }
 }
