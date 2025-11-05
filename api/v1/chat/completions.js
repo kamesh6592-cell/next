@@ -51,10 +51,6 @@ export default async function handler(req, res) {
     // If AJ-Mini explicitly requested, use HuggingFace directly
     if (forceAJMini) {
       console.log('AJ-Mini model requested, using HuggingFace Space...');
-      usingFallback = true;
-      
-      const lastMessage = messages[messages.length - 1];
-      const userMessage = lastMessage.content;
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 seconds
@@ -75,6 +71,21 @@ export default async function handler(req, res) {
       });
       
       clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        return res.status(response.status).json({
+          error: {
+            message: errorData.error || 'AJ-Mini API request failed',
+            type: 'api_error',
+            code: 'aj_mini_error'
+          }
+        });
+      }
+      
+      // AJ-Mini returns OpenAI-compatible format directly
+      const ajMiniData = await response.json();
+      return res.status(200).json(ajMiniData);
     } else {
       // Use Modal API for AJ-Coder (Primary)
       try {
