@@ -43,8 +43,8 @@ export default async function handler(req, res) {
   try {
     // Primary API: Modal.com with DeepSeek-Coder-6.7B (Flagship)
     const PRIMARY_API = 'https://kamesh6592-cell--aj-studioz-deepseek-fastapi-app.modal.run';
-    // Fallback API: HuggingFace Spaces with TinyLlama (Backup)
-    const FALLBACK_API = 'https://kamesh14151-aj-studioz-api.hf.space';
+    // Fallback API: HuggingFace Spaces with TinyLlama (Unlimited Backup)
+    const FALLBACK_API = 'https://kamesh14151-aj-deepseek-api.hf.space';
     
     // Try primary API first (Modal GPU)
     let apiUrl = PRIMARY_API;

@@ -36,29 +36,62 @@ export default async function handler(req, res) {
       });
     }
 
-    // Primary API: Modal.com with DeepSeek-Coder-6.7B
+    // Primary API: Modal.com with DeepSeek-Coder-6.7B (Fast, Professional)
     const MODAL_API = 'https://kamesh6592-cell--aj-studioz-deepseek-fastapi-app.modal.run';
+    // Fallback API: HuggingFace Space with TinyLlama (Unlimited, Free)
+    const FALLBACK_API = 'https://kamesh14151-aj-deepseek-api.hf.space';
     
-    // Forward to Modal API with OpenAI format
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 seconds
+    let response;
+    let usingFallback = false;
     
-    const response = await fetch(`${MODAL_API}/v1/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: model || 'aj-coder-v2',
-        messages,
-        max_tokens: max_tokens || 512,
-        temperature: temperature || 0.7,
-        stream: stream || false
-      }),
-      signal: controller.signal
-    });
-    
-    clearTimeout(timeoutId);
+    try {
+      // Try Modal API first (Primary)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 seconds
+      
+      response = await fetch(`${MODAL_API}/v1/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: model || 'aj-coder-v2',
+          messages,
+          max_tokens: max_tokens || 512,
+          temperature: temperature || 0.7,
+          stream: stream || false
+        }),
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new Error('Modal API failed');
+      }
+    } catch (primaryError) {
+      console.log('Primary API (Modal) failed, switching to fallback (HuggingFace)...', primaryError.message);
+      usingFallback = true;
+      
+      // Extract last user message for fallback
+      const lastMessage = messages[messages.length - 1];
+      const userMessage = lastMessage.content;
+      
+      // Try HuggingFace Space fallback (Unlimited)
+      const fallbackController = new AbortController();
+      const fallbackTimeoutId = setTimeout(() => fallbackController.abort(), 120000); // 120 seconds
+      
+      response = await fetch(`${FALLBACK_API}/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: userMessage }),
+        signal: fallbackController.signal
+      });
+      
+      clearTimeout(fallbackTimeoutId);
+    }
 
     if (!response.ok) {
       const errorData = await response.json();
@@ -68,6 +101,41 @@ export default async function handler(req, res) {
           type: 'api_error',
           code: 'backend_error'
         }
+      });
+    }
+
+    // Handle fallback response format conversion
+    if (usingFallback) {
+      const fallbackData = await response.json();
+      
+      // Convert HuggingFace format to OpenAI format
+      return res.status(200).json({
+        id: `chatcmpl-${Date.now()}`,
+        object: 'chat.completion',
+        created: Math.floor(Date.now() / 1000),
+        model: 'aj-mini-fallback',
+        choices: [{
+          index: 0,
+          message: {
+            role: 'assistant',
+            content: fallbackData.reply || fallbackData.response || 'No response from fallback'
+          },
+          finish_reason: 'stop'
+        }],
+        usage: {
+          prompt_tokens: messages.reduce((acc, m) => acc + m.content.length / 4, 0),
+          completion_tokens: (fallbackData.reply || '').length / 4,
+          total_tokens: messages.reduce((acc, m) => acc + m.content.length / 4, 0) + (fallbackData.reply || '').length / 4
+        },
+        provider: 'AJ STUDIOZ',
+        backend: 'HuggingFace Space (Fallback - Unlimited)',
+        model_details: {
+          name: 'AJ-Mini v1.0 (Backup)',
+          base_model: 'TinyLlama-1.1B',
+          developer: 'AJ STUDIOZ',
+          company: 'AJ STUDIOZ Technologies'
+        },
+        note: 'Using fallback server (unlimited, free forever)'
       });
     }
 
